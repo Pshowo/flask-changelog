@@ -1,66 +1,40 @@
 <h4 class='display-6'>Add new feature</h4>
 
-<form>
-    <div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
-            <label class="form-check-label" for="inlineRadio1">Program 1</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
-            <label class="form-check-label" for="inlineRadio2">Program 2</label>
-        </div>
+<form id="new_feature" action="{{ url_for('form') }}" method="POST">
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="programName" id="inlineRadio1" value="Program1">
+        <label class="form-check-label" for="inlineRadio1">Program 1</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="programName" id="inlineRadio2" value="Program2">
+        <label class="form-check-label" for="inlineRadio2">Program 2</label>
     </div>
 
-    <div>
-        <div class="col-sm">
-            <label class="form-label">Major version</label>
-            <input type="text" class="form-control" placeholder="__.0.0" aria-label="__.0.0">
-        </div>
-        <div class="col-sm">
-            <label class="form-label">Minor version</label>
-            <input type="text" class="form-control" placeholder="0.__.0" aria-label="0.__.0">
-        </div>
-        <div class="col-sm">
-            <label class="form-label">Sub version</label>
-            <input type="text" class="form-control" placeholder="0.0.__" aria-label="0.0.__">
-        </div>
+    <div class="input-group mb-3">
+      <span class="input-group-text">ver:</span>
+      <input type="text" class="form-control" name="majorVer">
+      <span class="input-group-text">.</span>
+      <input type="text" class="form-control" name="minorVer">
+      <span class="input-group-text">.</span>
+      <input type="text" class="form-control" name="subVer">
     </div>
 
-    <div class="col-sm">
-        <hr>
-        <label for="exampleDataList" class="form-label">Title</label>
-        <input class="form-control" list="datalistOptions" id="exampleDataList" placeholder="Title/Group">
-        <datalist id="datalistOptions">
-            <option value="Title 1">
-            <option value="Title 2">
-            <option value="Title 3">
-            <option value="Title 4">
-            <option value="Title 5">
-        </datalist>
-    </div>
+    <label class="form-label">Title</label>
+    <input class="form-control" list="datalistOptions" name="exampleDataList" placeholder="Title/Group">
+    <datalist id="datalistOptions">
+        <option value="Title 1">
+        <option value="Title 2">
+        <option value="Title 3">
+        <option value="Title 4">
+        <option value="Title 5">
+    </datalist>
 
-    <div class="col-sm">
-        <hr>
-        <label class="form-label">Description</label>
-        <textarea type="text" class="form-control" placeholder=""></textarea>
-    </div>
+    <label class="form-label">Description</label>
+    <textarea type="text" class="form-control" placeholder="" name="desc"></textarea>
 
-    <div>
-        <hr>
-        <label for="basic-url" class="form-label">Link to task</label>
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" id="basic-url" placeholder="trello, youtrack etc.." aria-describedby="basic-addon3">
-        </div>
-    </div>
+    <label  class="form-label">Link to task</label>
+    <input type="text" class="form-control" id="basic-url" placeholder="trello, youtrack etc.." name="link">
 
-    <div>
-        <hr>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </div>
-
-    </br>
-    <div>
-        <p><small class='text-end'>Instruction how to create new featrue and add main version.</small></p>
-    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+<p><small class='text-end'>Instruction how to create new featrue and add main version.</small></p>
