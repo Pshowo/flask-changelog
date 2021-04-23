@@ -1,9 +1,27 @@
 import flask
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, g
 from icecream import ic
+import sqlite3
+from datetime import datetime as dt
+import os
 
 app = flask.Flask(__name__)
+app_info = {
+    'db_file': "data/changelog.db"
+}
 
+def get_db():
+    if not hasattr(g, 'sqlite_db'):
+        conn = sqlite3.connect(app_info['db_file'])
+        conn.row_factory = sqlite3.Row
+        g.sqlite_db = conn
+    return g.sqlite_db
+
+# Close database connection when application context ends.
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(g, 'sqlite_db'):
+        g.sqlite_db.close()
 
 @app.route('/')
 def index():
@@ -26,6 +44,21 @@ def index():
 def form():
     for p in request.form:
         print(p, request.form[p])
+
+    form_data = {
+        'version': 0,
+        'date': dt.now().strftime('%Y-%m-%d'),
+        'description': request.form['desc'],
+        'id_author': 0,
+        'link': request.form['link'],
+        'title': request.form['title']
+    }
+
+    # Added form to db
+    db = get_db()
+    sql_command = "insert into features(id_version, date, description, id_author, link, title) values (?, ?, ?, ?, ?, ?);"
+    db.execute(sql_command, [form_data['version'], form_data['date'], form_data['description'], form_data['id_author'], form_data['link'], form_data['title']])
+    db.commit()
 
     return redirect(url_for('index'))
 if __name__ == '__main__':
