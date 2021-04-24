@@ -39,6 +39,7 @@ def index():
         prog_dict['tab1'] = 'active'
 
     db = get_db()
+    # Get versions
     _sql = " select * from version"
     cur = db.execute(_sql)
     versions = cur.fetchall()
@@ -57,31 +58,29 @@ def form():
     id_soft = cur.fetchone()
     ic(id_soft[0])
 
-    # sql_command_0 = f"select id_version, major_ver, minor_ver, sub_ver from version " \
-    #               f"where id_soft == {id_soft[0]} AND major_ver=={request.form['majorVer']} " \
-    #               f"and minor_ver=={request.form['minorVer']} AND sub_ver=={request.form['subVer']};"
-
-    sql_command = "insert into version(id_soft, major_ver, minor_ver, sub_ver) values(?,?,?,?);"
-    db.execute(sql_command, [id_soft[0], request.form['majorVer'], request.form['minorVer'], request.form['subVer']])
-    db.commit()
-    # cur = db.execute(sql_command_0)
-    # id_version = cur.fetchone()
-    # ic(id_version)
-
-
-    form_data = {
-        'version': 0,
-        'date': dt.now().strftime('%Y-%m-%d'),
-        'description': request.form['desc'],
-        'id_author': 0,
-        'link': request.form['link'],
-        'title': request.form['title'],
-
-    }
+    # ------------------------------
+    value_list = [1, request.form['majorVer'], request.form['minorVer'], request.form['subVer']]
+    # Checks if the version is available in db
+    sql_command1 = f"select * from version where id_soft==? and major_ver==? and minor_ver==? and sub_ver==?;"
+    cur = db.execute(sql_command1, value_list)
+    id_soft = cur.fetchone()
+    if id_soft is None:
+        # Version non exists, create new
+        sql_command = "insert into version(id_soft, major_ver, minor_ver, sub_ver) values (?, ?, ?, ?);"
+        db.execute(sql_command, value_list)
+        db.commit()
+        cur = db.execute(sql_command1, value_list)
+        id_soft = cur.fetchone()
+        a = (dict(zip(id_soft.keys(), id_soft)))
+        id_version = a['id_version']
+    else:
+        # Version is avaiable, returns id_version
+        a = (dict(zip(id_soft.keys(), id_soft)))
+        id_version = a['id_version']
 
     # Added form to db
     sql_command = "insert into features(id_version, date, description, id_author, link, title) values (?, ?, ?, ?, ?, ?);"
-    db.execute(sql_command, [form_data['version'], form_data['date'], form_data['description'], form_data['id_author'], form_data['link'], form_data['title']])
+    db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'], request.form['title']])
     db.commit()
 
     return redirect(url_for('index'))
