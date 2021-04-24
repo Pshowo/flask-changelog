@@ -59,7 +59,11 @@ def form():
     ic(id_soft[0])
 
     # ------------------------------
-    value_list = [1, request.form['majorVer'], request.form['minorVer'], request.form['subVer']]
+    if request.form['programName'] == 'Program 1':
+        prog = 1
+    else:
+        prog = 2
+    value_list = [prog, request.form['majorVer'], request.form['minorVer'], request.form['subVer']]
     # Checks if the version is available in db
     sql_command1 = f"select * from version where id_soft==? and major_ver==? and minor_ver==? and sub_ver==?;"
     cur = db.execute(sql_command1, value_list)
@@ -83,6 +87,6 @@ def form():
     db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'], request.form['title']])
     db.commit()
 
-    return redirect(url_for('index'))
+    return redirect(url_for('index', pr=[f'{prog}']))
 if __name__ == '__main__':
     app.run()
