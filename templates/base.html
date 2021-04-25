@@ -36,10 +36,8 @@
             <div class='container'>
                 <br>
                 <!-- if Program 1 -->
-                {% for card in versions %}
-                    {% if card.id_soft == pr.program %}
-                       {% include "changelog.html" %}
-                    {% endif %}
+                {% for feature in content %}
+                   {% include "changelog.html" %}
                 {% endfor %}
                 <!-- else -->
             </div>

@@ -44,7 +44,14 @@ def index():
     cur = db.execute(_sql)
     versions = cur.fetchall()
 
-    return render_template('base.html', pr=prog_dict, versions=versions)
+    #Get features content
+    _sql = "select v.major_ver, v.minor_ver, v.sub_ver, f.date, f.description, a.initial, f.link, f.title from " \
+           "features as f JOIN author as a on a.id_author=f.id_author JOIN version as v on v.id_version=f.id_version " \
+           f"where f.id_soft=={prog_dict['program']};"
+    cur = db.execute(_sql)
+    content = cur.fetchall()
+
+    return render_template('base.html', pr=prog_dict, content=content)
 
 @app.route('/form', methods=['GET', 'POST'])
 def form():
@@ -81,10 +88,11 @@ def form():
         # Version is avaiable, returns id_version
         a = (dict(zip(id_soft.keys(), id_soft)))
         id_version = a['id_version']
+    # -------------------------------------
 
     # Added form to db
-    sql_command = "insert into features(id_version, date, description, id_author, link, title) values (?, ?, ?, ?, ?, ?);"
-    db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'], request.form['title']])
+    sql_command = "insert into features(id_version, date, description, id_author, link, title, id_soft) values (?, ?, ?, ?, ?, ?, ?);"
+    db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'], request.form['title'], prog])
     db.commit()
 
     return redirect(url_for('index', pr=[f'{prog}']))
