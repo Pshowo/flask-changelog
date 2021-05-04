@@ -2,7 +2,8 @@
 <div class='container row'>
     <!-- Header -->
     <div class='container row'>
-        <h4 class='col-2' style="color:#452369;">{{feature.major_ver}}.{{feature.minor_ver}}.{{feature.sub_ver}}</h4>
+        <h4 class='col-2' style="color:#452369;">
+            {{feature[0].versions.major_ver}}.{{feature[0].versions.minor_ver}}.{{feature[0].versions.sub_ver}}</h4>
         <div class='col text-end'><button type="button" class="btn btn-outline-dark btn-sm">PDF</button></div>
     </div>
 
@@ -11,16 +12,22 @@
         <div class='col-1'></div>
         <div class='container col-11'>
             <div class='row'>
-                <h6 class='col'>{{feature.title}}</h6>
-                <small class='col-3 text-end '><em>{{feature.date}} &emsp; {{feature.initial}}</em></small>
+                <h6 class='col'>{{feature[0].title}}</h6>
+                <small class='col-3 text-end '><em>{{feature[0].date}} &emsp; {{feature[0].initial}}</em></small>
             </div>
             <div class='row'>
                 <div class='col-1'></div>
                 <ol class="col list-group list-group-numbered">
-                    <li class="">{{feature.description}}</li>
+                    {%if feature|length > 1%}
+                        {%for i in feature%}
+                            <li class="">{{feature[loop.index-1].description}}</li>
+                        {%endfor%}
+                    {%else%}
+                        <li class="">{{feature[0].description}}</li>
+                    {%endif%}
                 </ol></div>
             <div class='row'>
-                <a href="{{feature.link}}" class='col text-end'>Link</a>
+                <a href="{{feature[0].link}}" class='col text-end'>Link</a>
             </div>
         </div>
     </div>
