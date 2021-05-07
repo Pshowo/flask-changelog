@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, g
+from flask import Flask, render_template, redirect, url_for, request, g, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime as dt
 from icecream import ic
@@ -172,6 +172,34 @@ def index():
 
     return render_template('base.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions)
 
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+
+    if request.method == "GET":
+        return render_template('login.html', active_menu='login')
+    else:
+        user_name = "" if "user_name" not in request.form else request.form['user_name']
+        user_pass = "" if "user_pass" not in request.form else request.form['user_pass']
+
+        login = UserPass(user_name, user_pass)
+        login_record = login.login_user()
+
+        if login_record != None:
+            session['user'] = user_name
+            print("Login {} succesfull".format(user_name))
+            return redirect(url_for('index'))
+        else:
+            print("Logon field, try again.")
+            return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    print("Session:\n", session, "\n---")
+    if 'user' in session:
+        session.pop('user', None)
+        print('You are logged out')
+    return redirect(url_for('login'))
 
 @app.route('/form', methods=['GET', 'POST'])
 def form():
