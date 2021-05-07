@@ -1,8 +1,12 @@
 from flask import Flask, render_template, redirect, url_for, request, g
-from icecream import ic
-import sqlite3
-from datetime import datetime as dt
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime as dt
+from icecream import ic
+import random
+import string
+import hashlib
+import binascii
+import sqlite3
 import os
 
 app = Flask(__name__)
@@ -12,6 +16,15 @@ app_info = {
     'db_file': "data/changelog.db"
 }
 DB = SQLAlchemy(app)
+
+
+class Users(DB.Model):
+    id = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
+    name = DB.Column(DB.String(100), nullable=False, unique=True)
+    email = DB.Column(DB.String(100), nullable=False, unique=True)
+    password = DB.Column(DB.Text)
+    is_active = DB.Column(DB.Boolean)
+    is_admin = DB.Column(DB.Boolean)
 
 
 class Author(DB.Model):
@@ -75,6 +88,16 @@ def get_db():
 def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
+
+
+@app.route('/init_app')
+def init_app():
+
+    db = get_db()
+    sql_statement = 'select count(*) as cnt from users where is_active and is_admin;'
+    cur = db.execute(sql_statement)
+    active_admins = cur.fetchone()
+
 
 
 @app.route('/')
