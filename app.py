@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, g, session
+from flask import Flask, render_template, flash, redirect, url_for, request, g, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime as dt
 from icecream import ic
@@ -155,8 +155,9 @@ def init_app():
     return redirect(url_for('index'))
 
 
-@app.route('/')
-def index():
+
+@app.route('/features')
+def features():
 
     if 'pr' in request.args and int(request.args['pr']) == 2:
         prog = 2
@@ -173,7 +174,7 @@ def index():
     return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions)
 
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST'])
 def login():
 
     if request.method == "GET":
@@ -187,11 +188,12 @@ def login():
 
         if login_record != None:
             session['user'] = user_name
-            print("Login {} succesfull".format(user_name))
+            flash("Login {} succesfull".format(user_name))
             return redirect(url_for('index'))
         else:
-            print("Logon field, try again.")
+            flash("Logon field, try again.")
             return render_template('login_page.html')
+
 
 @app.route('/logout')
 def logout():
@@ -200,6 +202,7 @@ def logout():
         session.pop('user', None)
         print('You are logged out')
     return redirect(url_for('login'))
+
 
 @app.route('/form', methods=['GET', 'POST'])
 def form():
