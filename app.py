@@ -74,6 +74,49 @@ class Software(DB.Model):
         return "ID: {}/{}".format(self.id_software, self.name)
 
 
+class UserPass:
+
+    def __init__(self, user="", password=""):
+        self.user = user
+        self.password = password
+
+    def hash_password(self):
+        """ Hash a password for string """
+        os_urandom_static = b'D\xf5\xcd\xce[\xbf\x8a\xed<k\xc7\\\xfc\x8c\x17#\x11e2i\x97\x9d\x0b\x02\x1dvAJ\xa9\xff>\xd2\xe3L\xcc\x17\xe39[\xa1\xdf 7\xda*C\xde\x93\xc6[S\x13\xe5\xde\x01\xe26\xcaL\xbf'
+        salt = hashlib.sha256(os_urandom_static).hexdigest().encode('ascii')
+        pwdhash = hashlib.pbkdf2_hmac("sha512", self.password.encode('utf-8'), salt, 100000)
+        pwdhash = binascii.hexlify(pwdhash)
+        return (salt+pwdhash).decode('ascii')
+
+    def verify_password(self, stored_password, provided_password):
+        """ Verify a stored password against one provided by user """
+        salt = stored_password[:64]
+        stored_password = stored_password[64:]
+        pwdhash = hashlib.pbkdf2_hmac('sha512', provided_password.encode('utf-8'), salt.encode('ascii'), 100000)
+        pwdhash = binascii.hexlify(pwdhash).decode('ascii')
+        return pwdhash == stored_password
+
+    def get_random_user_password(self):
+        random_user = "".join(random.choice(string.ascii_lowercase) for i in range(4))
+        self.user = random_user
+
+        password_characters = string.ascii_letters
+        random_password = "".join(random.choice(password_characters) for i in range(4))
+        self.password = random_password
+
+    def login_user(self):
+        db = get_db()
+        sql_statement = 'select id, name, email, password, is_active, is_admin from users where name=?'
+        cur = db.execute(sql_statement, [self.user])
+        user_record = cur.fetchone()
+
+        if user_record is not None and self.verify_password(user_record['password'], self.password):
+            return user_record
+        else:
+            self.user = None
+            self.password = None
+            return None
+
 
 def get_db():
     if not hasattr(g, 'sqlite_db'):
