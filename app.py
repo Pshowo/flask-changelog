@@ -183,15 +183,17 @@ def login():
         user_name = "" if "user_name" not in request.form else request.form['user_name']
         user_pass = "" if "user_pass" not in request.form else request.form['user_pass']
 
+        print("user_name: ", user_name)
+        print("user_pass: ", user_pass)
         login = UserPass(user_name, user_pass)
         login_record = login.login_user()
 
         if login_record != None:
             session['user'] = user_name
-            flash("Login {} succesfull".format(user_name))
-            return redirect(url_for('index'))
+            flash("Login {} succesfull".format(user_name), category='message')
+            return redirect(url_for('features'))
         else:
-            flash("Logon field, try again.")
+            flash("Login field, try again.", category='error')
             return render_template('login_page.html')
 
 

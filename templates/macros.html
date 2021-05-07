@@ -1,12 +1,22 @@
 {% macro show_flash_message(message) %}
-  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <strong>{{ message }}</strong>
+  {% if message[0] == 'message' %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+  {% elif message[0] == 'info' %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+  {% elif message[0] == 'error' %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {% elif message[0] == 'warning' %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+  {%else%}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+  {%endif%}
+    <strong>{{message[1]}} </strong>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
+    </div>
 {% endmacro %}
 
 {% macro show_all_flash_message() %}
-  {% for message in get_flashed_messages() %}
+  {% for message in get_flashed_messages(with_categories=True) %}
     {{ show_flash_message(message) }}
   {% endfor %}
 {% endmacro%}
