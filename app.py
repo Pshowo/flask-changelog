@@ -141,6 +141,18 @@ def init_app():
     cur = db.execute(sql_statement)
     active_admins = cur.fetchone()
 
+    if active_admins is not None and active_admins['cnt'] > 0:
+        print("Application is already set-up. Nothing to do.")
+        return redirect(url_for("index"))
+
+    # if not - create or update random admin accounts
+    user_pass = UserPass()
+    user_pass.get_random_user_password()
+    db.execute("""insert into users(name, email, password, is_active, is_admin) values(?,?,?, True, True);""",
+               [user_pass.user, 'pjot@mail.no', user_pass.hash_password()])
+    db.commit()
+    print("User {} with password {} has been created.".format(user_pass, user_pass.password))
+    return redirect(url_for('index'))
 
 
 @app.route('/')
