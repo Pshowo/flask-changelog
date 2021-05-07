@@ -170,14 +170,14 @@ def index():
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
 
-    return render_template('base.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions)
+    return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions)
 
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
 
     if request.method == "GET":
-        return render_template('login.html', active_menu='login')
+        return render_template('login_page.html', active_menu='login')
     else:
         user_name = "" if "user_name" not in request.form else request.form['user_name']
         user_pass = "" if "user_pass" not in request.form else request.form['user_pass']
@@ -191,7 +191,7 @@ def login():
             return redirect(url_for('index'))
         else:
             print("Logon field, try again.")
-            return render_template('login.html')
+            return render_template('login_page.html')
 
 @app.route('/logout')
 def logout():

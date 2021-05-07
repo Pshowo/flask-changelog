@@ -1,5 +1,5 @@
 <!-- Main version -->
-<div class='container row'>
+<div class='container row p-0 m-0'>
     <!-- Header -->
     <div class='container row'>
         <h4 class='col-2' style="color:#452369;">
@@ -12,25 +12,27 @@
         <div class='col-1'></div>
         <div class='container col-11'>
             <div class='row'>
-                <h6 class='col'>{{feature[0].title}}</h6>
+                <h6 class='col fw-bolder'>{{feature[0].title}}</h6>
                 <small class='col-3 text-end '><em>{{feature[0].date}} &emsp; {{feature[0].initial}}</em></small>
             </div>
             <div class='row'>
                 <div class='col-1'></div>
                 <ol class="col list-group list-group-numbered">
-                    {%if feature|length > 1%}
-                        {%for i in feature%}
-                            <li class="">{{feature[loop.index-1].description}}</li>
-                        {%endfor%}
-                    {%else%}
-                        <li class="">{{feature[0].description}}</li>
-                    {%endif%}
+                    {%for i in feature%}
+                        <li class="row">
+                            <p class="col my-0">{{feature[loop.index-1].description}}</p>
+                            {%if feature[0].link != ""%}
+                            <a href="{{feature[0].link}}" class='col-1 text-end'><i class="fas fa-link"></i></a>
+                            {%endif%}
+                        </li>
+                    {%endfor%}
                 </ol></div>
             <div class='row'>
-                <a href="{{feature[0].link}}" class='col text-end'>Link</a>
+
             </div>
+            <hr class="my-2">
         </div>
     </div>
     <!-- koniec do petli -->
-    <hr style="margin-top: 10px;">
+
 </div>
