@@ -170,7 +170,7 @@ def features():
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
 
-    return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions)
+    return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions, active_menu='features')
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -251,8 +251,12 @@ def form():
 
 @app.route('/users')
 def users():
-    return "List of all users"
+    db = get_db()
+    sql_command = 'select id, name, email, is_admin, is_active from users;'
+    cur = db.execute(sql_command)
+    all_users = cur.fetchall()
 
+    return render_template('users.html', active_menu="users", users=all_users)
 
 @app.route('/user_status_change/<action>/<user_name>')
 def user_status_change(action, user_name):
@@ -266,7 +270,16 @@ def edit_user(user_name):
 
 @app.route('/user_delete/<user_name>')
 def delete_user(user_name):
-    return "Delete user"
+
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    login = session['user']
+
+    db = get_db()
+    sql_command = 'delete from users where name = ? and name <> ?'
+    db.execute(sql_command, [user_name, login])
+    db.commit()
+    return redirect(url_for('users'))
 
 
 @app.route('/new_user', methods=['GET', 'POST'])
