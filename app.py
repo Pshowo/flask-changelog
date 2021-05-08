@@ -35,7 +35,7 @@ class Author(DB.Model):
         return "ID: {}/{}".format(self.id_author, self.initial)
 
 
-class Features(DB.Model):  #parent
+class Features(DB.Model):  # parent
     __tablename__ = 'features'
     id_features = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_version = DB.Column(DB.Integer, DB.ForeignKey('version.id_version'))
@@ -47,6 +47,7 @@ class Features(DB.Model):  #parent
     id_soft = DB.Column(DB.Integer)
 
     versions = DB.relationship('Version', back_populates="all_version", lazy=True)
+
     # version_minor =
     # version_sub =
 
@@ -86,7 +87,7 @@ class UserPass:
         salt = hashlib.sha256(os_urandom_static).hexdigest().encode('ascii')
         pwdhash = hashlib.pbkdf2_hmac("sha512", self.password.encode('utf-8'), salt, 100000)
         pwdhash = binascii.hexlify(pwdhash)
-        return (salt+pwdhash).decode('ascii')
+        return (salt + pwdhash).decode('ascii')
 
     def verify_password(self, stored_password, provided_password):
         """ Verify a stored password against one provided by user """
@@ -135,7 +136,6 @@ def close_db(error):
 
 @app.route('/init_app')
 def init_app():
-
     db = get_db()
     sql_statement = 'select count(*) as cnt from users where is_active and is_admin;'
     cur = db.execute(sql_statement)
@@ -155,10 +155,8 @@ def init_app():
     return redirect(url_for('index'))
 
 
-
 @app.route('/features')
 def features():
-
     if 'pr' in request.args and int(request.args['pr']) == 2:
         prog = 2
     else:
@@ -166,7 +164,8 @@ def features():
     DB.create_all()
     # program = Software.query.filter(Software.id_software == prog).first()
     all_version = Version.query.all()
-    distinct_versions = DB.session.query(Features.id_version).filter(Features.id_soft == prog).order_by(Features.id_version.desc()).distinct().all()
+    distinct_versions = DB.session.query(Features.id_version).filter(Features.id_soft == prog).order_by(
+        Features.id_version.desc()).distinct().all()
     content = []
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
@@ -176,7 +175,6 @@ def features():
 
 @app.route("/", methods=['GET', 'POST'])
 def login():
-
     if request.method == "GET":
         return render_template('login_page.html', active_menu='login')
     else:
@@ -208,7 +206,6 @@ def logout():
 
 @app.route('/form', methods=['GET', 'POST'])
 def form():
-
     for p in request.form:
         print(p, request.form[p])
 
@@ -245,9 +242,77 @@ def form():
 
     # Added form to db
     sql_command = "insert into features(id_version, date, description, id_author, link, title, id_soft) values (?, ?, ?, ?, ?, ?, ?);"
-    db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'], request.form['title'], prog])
+    db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'],
+                             request.form['title'], prog])
     db.commit()
 
     return redirect(url_for('index', pr=[f'{prog}']))
+
+
+@app.route('/users')
+def users():
+    return "List of all users"
+
+
+@app.route('/user_status_change/<action>/<user_name>')
+def user_status_change(action, user_name):
+    return "Change is_active or is_admin for particular user."
+
+
+@app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
+def edit_user(user_name):
+    return "Edit user"
+
+
+@app.route('/user_delete/<user_name>')
+def delete_user(user_name):
+    return "Delete user"
+
+
+@app.route('/new_user', methods=['GET', 'POST'])
+def new_user():
+    if "user" not in session:
+        return redirect(url_for('login'))
+    login = session['user']
+    db = get_db()
+    message = None
+    user = {}
+    if request.method == "GET":
+        return render_template('new_user.html', active_menu='users', user=user)
+    else:
+        user['user_name'] = "" if 'user_name' not in request.form else request.form['user_name']
+        user['email'] = "" if 'email' not in request.form else request.form['email']
+        user['user_pass'] = "" if 'user_pass' not in request.form else request.form['user_pass']
+
+        # checks if name exists in database
+        cursor = db.execute('select count(*) as cnt from users where name=?', [user['user_name']])
+        record = cursor.fetchone()
+        is_user_name_unique = (record['cnt'] == 0)
+
+        # checks if email exists in database
+        cursor = db.execute('select count(*) as cnt from users where email=?', [user['email']])
+        record = cursor.fetchone()
+        is_user_email_unique = (record['cnt'] == 0)
+
+        if user['user_name'] == '' or user['email'] == "" or user['user_pass'] == "":
+            message = ("Cannot be empty", 'info')
+        elif not is_user_name_unique:
+            message = ("User with the name '{}' already exists.".format(user['user_name']), 'info')
+        elif not is_user_email_unique:
+            message = ("User with the email '{}' already exists.".format(user['email']), 'info')
+
+        if not message:
+            user_pass = UserPass(user['user_name'], user['user_pass'])
+            password_hash = user_pass.hash_password()
+            sql_statement = """insert into users(name, email, password, is_active, is_admin) values(?, ?, ?, True, False);"""
+            db.execute(sql_statement, [user['user_name'], user['email'], password_hash])
+            db.commit()
+            flash("User '{}' created.".format(user['user_name']))
+            return redirect(url_for('users'))
+        else:
+            flash("Correct error: {}".format(message[0]), category="{}".format(message[1]))
+            return render_template('new_user.html', active_menu='users', user=user)
+
+
 if __name__ == '__main__':
     app.run()
