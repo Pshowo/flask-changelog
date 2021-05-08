@@ -258,6 +258,7 @@ def users():
 
     return render_template('users.html', active_menu="users", users=all_users)
 
+
 @app.route('/user_status_change/<action>/<user_name>')
 def user_status_change(action, user_name):
     return "Change is_active or is_admin for particular user."
@@ -265,8 +266,38 @@ def user_status_change(action, user_name):
 
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
-    return "Edit user"
 
+    db = get_db()
+    print("User:", user_name, type("user_name"))
+    print(request.endpoint)
+
+    cur = db.execute('select name, email from users where name=?', [user_name])
+    user = cur.fetchone()
+    print("User:", user)
+    message = None
+
+    if user is None:
+        flash("No such user", category='warning')
+        return redirect(url_for('users'))
+    if request.method == 'GET':
+        return render_template('edit_user.html', active_menu='users', user=user)
+    else:
+        new_email = '' if 'email' not in request.form else request.form['email']
+        new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
+
+        if new_email != user['email']:
+            sql = 'update users set email=? where name=?'
+            db.execute(sql, [new_email, user_name])
+            db.commit()
+            flash("Email was changed", category='message')
+
+        if new_password != '':
+            user_pass = UserPass(user_name, new_password)
+            sql = 'update users set password=? where name=?'
+            db.execute(sql, [user_pass.hash_password(), user_name])
+            db.commit()
+            flash("Password was changed", category='message')
+        return redirect(url_for('users'))
 
 @app.route('/user_delete/<user_name>')
 def delete_user(user_name):

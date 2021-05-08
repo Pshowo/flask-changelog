@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Edit User{% endblock%}
+{% block content %}
+<div class="conteiner row">
+  <div class="col-2"></div>
+
+  <div class="col conteiner">
+    <div class="row m-20">
+      <div class="col-5 h1">Edit user {{ user.name }}</div>
+    </div>
+
+    <form id="user_form" action="{{ url_for('edit_user', user_name=user.name) }}" method="POST">
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{user.email}}">
+      </div>
+
+      <div class="mb-3">
+        <label for="user_pass" class="form-label">Password</label>
+        <input type="password" class="form-control" id="user_pass" name="user_pass">
+        <div id="passHelp" class="form-text">If you don't want to change password to leave empty this field.</div>
+      </div>
+
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+        <label class="form-check-label" for="exampleCheck1">Check me out</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" value="Send">Submit</button>
+
+    </form>
+  </div>
+  <div class="col-2"></div>
+</div>
+{% endblock %}
