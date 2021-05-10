@@ -261,8 +261,21 @@ def users():
 
 @app.route('/user_status_change/<action>/<user_name>')
 def user_status_change(action, user_name):
-    return "Change is_active or is_admin for particular user."
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    login = session['user']
 
+    db = get_db()
+
+    if action == 'active':
+        db.execute("""update users set is_active = (is_active + 1) % 2
+                    where name =? and name <> ?;""", [user_name, login])
+        db.commit()
+    elif action == "admin":
+        db.execute("""update users set is_admin = (is_admin + 1) % 2
+                            where name =? and name <> ?;""", [user_name, login])
+        db.commit()
+    return redirect(url_for('users'))
 
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
