@@ -217,7 +217,7 @@ def login():
         if login_record != None:
             session['user'] = user_name
             flash("Login {} succesfull".format(user_name), category='message')
-            return redirect(url_for('features'))
+            return redirect(url_for('features', program=1))
         else:
             flash("Login field, try again.", category='error')
             return render_template('login_page.html', active_menu='login', login=login)
