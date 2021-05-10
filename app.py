@@ -80,6 +80,9 @@ class UserPass:
     def __init__(self, user="", password=""):
         self.user = user
         self.password = password
+        self.email = ''
+        self.is_valid = False
+        self.is_admin = False
 
     def hash_password(self):
         """ Hash a password for string """
@@ -117,6 +120,25 @@ class UserPass:
             self.user = None
             self.password = None
             return None
+
+    def get_user_info(self):
+        db = get_db()
+        sql = "select name, email, is_active, is_admin from users where name = ?"
+        cur = db.execute(sql, [self.user])
+        db_user = cur.fetchone()
+
+        if db_user is None:
+            self.is_valid = False
+            self.is_admin = False
+            self.email = ""
+        elif db_user['is_active'] != 1:
+            self.is_valid = False
+            self.is_admin = False
+            self.email = db_user['email']
+        else:
+            self.is_valid = True
+            self.is_admin = db_user['is_admin']
+            self.email = db_user['email']
 
 
 def get_db():
@@ -157,6 +179,11 @@ def init_app():
 
 @app.route('/features')
 def features():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    # if not login.is_valid:
+    #     return redirect(url_for('login'))
+
     if 'pr' in request.args and int(request.args['pr']) == 2:
         prog = 2
     else:
@@ -170,13 +197,17 @@ def features():
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
 
-    return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions, active_menu='features')
+    return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions,
+                           active_menu='features', login=login)
 
 
 @app.route("/", methods=['GET', 'POST'])
 def login():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+
     if request.method == "GET":
-        return render_template('login_page.html', active_menu='login')
+        return render_template('login_page.html', active_menu='login', login=login)
     else:
         user_name = "" if "user_name" not in request.form else request.form['user_name']
         user_pass = "" if "user_pass" not in request.form else request.form['user_pass']
@@ -192,20 +223,25 @@ def login():
             return redirect(url_for('features'))
         else:
             flash("Login field, try again.", category='error')
-            return render_template('login_page.html')
+            return render_template('login_page.html', active_menu='login', login=login)
 
 
 @app.route('/logout')
 def logout():
-    print("Session:\n", session, "\n---")
+
     if 'user' in session:
         session.pop('user', None)
-        print('You are logged out')
+        flash('You are logged out', category='info')
     return redirect(url_for('login'))
 
 
 @app.route('/form', methods=['GET', 'POST'])
 def form():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        return redirect(url_for('login'))
+
     for p in request.form:
         print(p, request.form[p])
 
@@ -251,34 +287,44 @@ def form():
 
 @app.route('/users')
 def users():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        return redirect(url_for('login'))
     db = get_db()
     sql_command = 'select id, name, email, is_admin, is_active from users;'
     cur = db.execute(sql_command)
     all_users = cur.fetchall()
 
-    return render_template('users.html', active_menu="users", users=all_users)
+    return render_template('users.html', active_menu="users", users=all_users, login=login)
 
 
 @app.route('/user_status_change/<action>/<user_name>')
 def user_status_change(action, user_name):
-    if 'user' not in session:
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
         return redirect(url_for('login'))
-    login = session['user']
+
 
     db = get_db()
 
     if action == 'active':
         db.execute("""update users set is_active = (is_active + 1) % 2
-                    where name =? and name <> ?;""", [user_name, login])
+                    where name =? and name <> ?;""", [user_name, login.user])
         db.commit()
     elif action == "admin":
         db.execute("""update users set is_admin = (is_admin + 1) % 2
-                            where name =? and name <> ?;""", [user_name, login])
+                            where name =? and name <> ?;""", [user_name, login.user])
         db.commit()
     return redirect(url_for('users'))
 
 @app.route('/edit_user/<user_name>', methods=['GET', 'POST'])
 def edit_user(user_name):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        return redirect(url_for('login'))
 
     db = get_db()
     print("User:", user_name, type("user_name"))
@@ -293,7 +339,7 @@ def edit_user(user_name):
         flash("No such user", category='warning')
         return redirect(url_for('users'))
     if request.method == 'GET':
-        return render_template('edit_user.html', active_menu='users', user=user)
+        return render_template('edit_user.html', active_menu='users', user=user, login=login)
     else:
         new_email = '' if 'email' not in request.form else request.form['email']
         new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
@@ -314,6 +360,10 @@ def edit_user(user_name):
 
 @app.route('/user_delete/<user_name>')
 def delete_user(user_name):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        return redirect(url_for('login'))
 
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -321,21 +371,23 @@ def delete_user(user_name):
 
     db = get_db()
     sql_command = 'delete from users where name = ? and name <> ?'
-    db.execute(sql_command, [user_name, login])
+    db.execute(sql_command, [user_name, login.user])
     db.commit()
     return redirect(url_for('users'))
 
 
 @app.route('/new_user', methods=['GET', 'POST'])
 def new_user():
-    if "user" not in session:
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
         return redirect(url_for('login'))
-    login = session['user']
+
     db = get_db()
     message = None
     user = {}
     if request.method == "GET":
-        return render_template('new_user.html', active_menu='users', user=user)
+        return render_template('new_user.html', active_menu='users', user=user, login=login)
     else:
         user['user_name'] = "" if 'user_name' not in request.form else request.form['user_name']
         user['email'] = "" if 'email' not in request.form else request.form['email']
@@ -368,7 +420,7 @@ def new_user():
             return redirect(url_for('users'))
         else:
             flash("Correct error: {}".format(message[0]), category="{}".format(message[1]))
-            return render_template('new_user.html', active_menu='users', user=user)
+            return render_template('new_user.html', active_menu='users', user=user, login=login)
 
 
 if __name__ == '__main__':

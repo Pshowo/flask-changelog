@@ -24,6 +24,8 @@
 
 {% block aside%}
 <aside class='col-4' >
-    {% include "form.html" %}
+    {% if login.user != None %}
+        {% include "form.html" %}
+    {% endif %}
 </aside>
 {% endblock %}

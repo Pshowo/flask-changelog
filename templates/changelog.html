@@ -4,7 +4,9 @@
     <div class='container row'>
         <h4 class='col-2' style="color:#452369;">
             {{feature[0].versions.major_ver}}.{{feature[0].versions.minor_ver}}.{{feature[0].versions.sub_ver}}</h4>
-        <div class='col text-end'><button type="button" class="btn btn-outline-dark btn-sm">PDF</button></div>
+        {% if login.user != None %}
+            <div class='col text-end'><button type="button" class="btn btn-outline-dark btn-sm">PDF</button></div>
+        {% endif %}
     </div>
 
     <!-- Zastapic petla -->
@@ -21,9 +23,11 @@
                     {%for i in feature%}
                         <li class="row">
                             <p class="col my-0">{{feature[loop.index-1].description}}</p>
-                            {%if feature[0].link != ""%}
-                            <a href="{{feature[0].link}}" class='col-1 text-end'><i class="fas fa-link"></i></a>
-                            {%endif%}
+                            {% if login.user != None %}
+                                {%if feature[0].link != ""%}
+                                <a href="{{feature[0].link}}" class='col-1 text-end'><i class="fas fa-link"></i></a>
+                                {%endif%}
+                            {% endif %}
                         </li>
                     {%endfor%}
                 </ol></div>
