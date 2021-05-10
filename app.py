@@ -177,27 +177,24 @@ def init_app():
     return redirect(url_for('index'))
 
 
-@app.route('/features')
-def features():
+@app.route('/features/<int:program>')
+def features(program):
+    print("Program:", program, type(program))
     login = UserPass(session.get('user'))
     login.get_user_info()
     # if not login.is_valid:
     #     return redirect(url_for('login'))
 
-    if 'pr' in request.args and int(request.args['pr']) == 2:
-        prog = 2
-    else:
-        prog = 1
     DB.create_all()
     # program = Software.query.filter(Software.id_software == prog).first()
     all_version = Version.query.all()
-    distinct_versions = DB.session.query(Features.id_version).filter(Features.id_soft == prog).order_by(
+    distinct_versions = DB.session.query(Features.id_version).filter(Features.id_soft == program).order_by(
         Features.id_version.desc()).distinct().all()
     content = []
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
 
-    return render_template('features.html', pr=prog, content=content, versions=all_version, ds_ver=distinct_versions,
+    return render_template('features.html', pr=program, content=content, versions=all_version, ds_ver=distinct_versions,
                            active_menu='features', login=login)
 
 

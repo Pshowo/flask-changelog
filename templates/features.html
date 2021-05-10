@@ -5,10 +5,10 @@
 <section class='col-8'>
     <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link {{ 'active' if pr == 1 }}" aria-current="page" href="/?pr=1">Program 1</a>
+          <a class="nav-link {{ 'active' if pr == 1 }}" aria-current="page" href="{{ url_for('features', program=1)}}">Program 1</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ 'active' if pr == 2}}" aria-current="page" href="/?pr=2">Program 2</a>
+          <a class="nav-link {{ 'active' if pr == 2}}" aria-current="page" href="{{ url_for('features', program=2)}}">Program 2</a>
         </li>
     </ul>
     <div class='container pe-0'>
