@@ -70,6 +70,7 @@ class Version(DB.Model):  # child
 class Software(DB.Model):
     id_software = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     name = DB.Column(DB.String(30))
+    description = DB.Column(DB.Text)
 
     def __repr__(self):
         return "ID: {}/{}".format(self.id_software, self.name)
@@ -193,9 +194,9 @@ def features(program):
     content = []
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
-
+    programs = Software.query.all()
     return render_template('features.html', pr=program, content=content, versions=all_version, ds_ver=distinct_versions,
-                           active_menu='features', login=login)
+                           active_menu='features', login=login, programs=programs)
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -419,6 +420,28 @@ def new_user():
             flash("Correct error: {}".format(message[0]), category="{}".format(message[1]))
             return render_template('new_user.html', active_menu='users', user=user, login=login)
 
+@app.route('/programs', methods=['GET','POST'])
+def programs():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    program = {}
+
+    softwares = Software.query.all()
+    print(softwares)
+    if request.method == "GET":
+        return render_template('programs.html', softwares=softwares, active_menu='programs', login=login)
+    else:
+        program['name'] = "" if "name" not in request.form else request.form['name']
+        program['desc'] = "" if "desc" not in request.form else request.form['desc']
+
+        print("New name:", program['name'])
+        print("New desc:", program['desc'])
+
+        flash("New program: {} is added. Desc: {}".format(program['name'], program['desc']), category="info")
+        new_prog = Software(name=program['name'], description=program['desc'])
+        DB.session.add(new_prog)
+        DB.session.commit()
+        return redirect( url_for('programs') )
 
 if __name__ == '__main__':
     app.run()

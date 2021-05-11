@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Programs{% endblock%}
+
+{% block content %}
+  <table class="table table-striped col ms-5">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Program name</th>
+        <th scope="col">Description</th>
+        {% if login.user != None %}
+        <th scope="col">Action</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for program in softwares %}
+        <tr>
+          <td>{{program.id_software}}</td>
+          <td>{{program.name}}</td>
+          <td>{{program.description}}</td>
+          {% if login.user != None %}
+          <td>
+          <a type="button" class="btn btn-outline-dark btn-sm"
+             href="#">Edit</a>
+          <a type="button" class="btn btn-outline-danger btn-sm delete-confirm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+              data-url="#">Delete</a>
+          </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+{% endblock%}
+
+{% block aside %}
+<aside class='col-4' >
+  {% if login.user != None %}
+        <form id="new_program" action="{{ url_for('programs') }}" method="POST">
+          <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Program name</label>
+            <input type="text" class="form-control" name='name' id="exampleFormControlInput1" placeholder="Program 1">
+          </div>
+          <div class="mb-3">
+            <label for="exampleFormControlTextarea1" class="form-label">Program description</label>
+            <textarea class="form-control" name='desc' id="exampleFormControlTextarea1" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Add +</button>
+        </form>
+  {% endif %}
+</aside>
+{% endblock %}

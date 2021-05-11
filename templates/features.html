@@ -4,12 +4,11 @@
 {% block content %}
 <section class='col-8'>
     <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link {{ 'active' if pr == 1 }}" aria-current="page" href="{{ url_for('features', program=1)}}">Program 1</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ 'active' if pr == 2}}" aria-current="page" href="{{ url_for('features', program=2)}}">Program 2</a>
-        </li>
+        {% for program in programs%}
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if pr == program.id_software }}" aria-current="page" href="{{ url_for('features', program=program.id_software)}}">{{program.name}}</a>
+            </li>
+        {% endfor%}
     </ul>
     <div class='container pe-0'>
         <br>
