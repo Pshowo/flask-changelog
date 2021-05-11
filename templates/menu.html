@@ -9,7 +9,7 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('programs') }}">Programs</a>
+            <a class="nav-link {{'active' if active_menu == 'programs'}}" href="{{ url_for('programs') }}">Programs</a>
           </li>
           {% if login.user != None %}
           <li class="nav-item dropdown">

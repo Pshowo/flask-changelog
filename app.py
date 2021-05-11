@@ -180,7 +180,6 @@ def init_app():
 
 @app.route('/features/<int:program>')
 def features(program):
-    print("Program:", program, type(program))
     login = UserPass(session.get('user'))
     login.get_user_info()
     # if not login.is_valid:
@@ -325,12 +324,9 @@ def edit_user(user_name):
         return redirect(url_for('login'))
 
     db = get_db()
-    print("User:", user_name, type("user_name"))
-    print(request.endpoint)
 
     cur = db.execute('select name, email from users where name=?', [user_name])
     user = cur.fetchone()
-    print("User:", user)
     message = None
 
     if user is None:
@@ -427,21 +423,53 @@ def programs():
     program = {}
 
     softwares = Software.query.all()
-    print(softwares)
     if request.method == "GET":
         return render_template('programs.html', softwares=softwares, active_menu='programs', login=login)
     else:
         program['name'] = "" if "name" not in request.form else request.form['name']
         program['desc'] = "" if "desc" not in request.form else request.form['desc']
 
-        print("New name:", program['name'])
-        print("New desc:", program['desc'])
 
         flash("New program: {} is added. Desc: {}".format(program['name'], program['desc']), category="info")
         new_prog = Software(name=program['name'], description=program['desc'])
         DB.session.add(new_prog)
         DB.session.commit()
         return redirect( url_for('programs') )
+
+@app.route('/edit_program/<program_id>', methods=['GET', 'POST'])
+def edit_program(program_id):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        return redirect(url_for('login'))
+
+    db = get_db()
+
+    cur = db.execute('select id_software, name, description from software where id_software=?', [program_id])
+    program = cur.fetchone()
+    message = None
+
+    if program is None:
+        flash("No such program", category='warning')
+        return redirect(url_for('programs'))
+    if request.method == 'GET':
+        return render_template('edit_program.html', active_menu='programs', program=program, login=login)
+    else:
+        new_name = '' if 'name' not in request.form else request.form['name']
+        new_desc = '' if 'desc' not in request.form else request.form['desc']
+
+        if new_name != program['name']:
+            sql = 'update software set name=? where id_software=?'
+            db.execute(sql, [new_name, program['id_software']])
+            db.commit()
+            flash("Email was changed", category='message')
+
+        if new_desc != '':
+            sql = 'update software set description=? where id_software=?'
+            db.execute(sql, [new_desc, program[0]])
+            db.commit()
+            flash("Description was changed", category='message')
+        return redirect(url_for('programs'))
 
 if __name__ == '__main__':
     app.run()

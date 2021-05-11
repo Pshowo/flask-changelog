@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Edit program{% endblock%}
+{% block content %}
+
+<div class="conteiner row">
+  <div class="col-2"></div>
+
+  <div class="col conteiner">
+    <div class="row m-20">
+      <div class="col h1">Edit: {{ program.name }}, {{program.id_software}}</div>
+    </div>
+
+    <form id="program_form" action="{{ url_for('edit_program', program_id=program.id_software) }}" method="POST">
+
+      <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{program.name}}">{{program.name}}
+      </div>
+
+      <div class="mb-3">
+        <label for="desc" class="form-label">Description</label>
+        <textarea class="form-control" name='desc' name='desc' id="desc" rows="3" value="{{program.description}}">{{program.description}}</textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary" value="Send">Save changes</button>
+
+    </form>
+  </div>
+  <div class="col-2"></div>
+</div>
+{% endblock %}

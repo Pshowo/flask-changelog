@@ -23,7 +23,7 @@
           {% if login.user != None %}
           <td>
           <a type="button" class="btn btn-outline-dark btn-sm"
-             href="#">Edit</a>
+             href="{{ url_for('edit_program', program_id=program.id_software) }}">Edit</a>
           <a type="button" class="btn btn-outline-danger btn-sm delete-confirm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
               data-url="#">Delete</a>
           </td>
@@ -38,10 +38,11 @@
 {% block aside %}
 <aside class='col-4' >
   {% if login.user != None %}
+        <h5 class="text-center">Add new program</h5><hr>
         <form id="new_program" action="{{ url_for('programs') }}" method="POST">
           <div class="mb-3">
             <label for="exampleFormControlInput1" class="form-label">Program name</label>
-            <input type="text" class="form-control" name='name' id="exampleFormControlInput1" placeholder="Program 1">
+            <input type="text" class="form-control" name='name' id="exampleFormControlInput1">
           </div>
           <div class="mb-3">
             <label for="exampleFormControlTextarea1" class="form-label">Program description</label>
