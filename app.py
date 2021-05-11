@@ -471,5 +471,18 @@ def edit_program(program_id):
             flash("Description was changed", category='message')
         return redirect(url_for('programs'))
 
+@app.route('/program_delete/<program_id>')
+def delete_program(program_id):
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid or not login.is_admin:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    sql_command = 'delete from software where id_software = ?'
+    db.execute(sql_command, [program_id])
+    db.commit()
+    return redirect(url_for('programs'))
+
 if __name__ == '__main__':
     app.run()
