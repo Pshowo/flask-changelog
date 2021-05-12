@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, redirect, url_for, request, g, session
+from flask import Flask, render_template, flash, redirect, url_for, request, g, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime as dt
 from icecream import ic
@@ -7,6 +7,7 @@ import string
 import hashlib
 import binascii
 import sqlite3
+from docxtpl import DocxTemplate
 import os
 
 app = Flask(__name__)
@@ -205,8 +206,6 @@ def features(program):
     programs = Software.query.all()  # software
     titles = DB.session.query(Title).filter(Title.id_software == program).distinct().all()
     dis_titles = DB.session.query(Title.title).filter(Title.id_software==program).distinct().all()
-    print("Titles:")
-    print(titles)
 
     return render_template('features.html', pr=program, content=content, versions=all_version, ds_ver=distinct_versions,
                            active_menu='features', login=login, programs=programs, titles=titles, options=dis_titles)
@@ -498,6 +497,45 @@ def delete_program(program_id):
     db.execute(sql_command, [program_id])
     db.commit()
     return redirect(url_for('programs'))
+
+@app.route('/download/<program>/<version>')
+def download_doc(program, version):
+
+    # Import template document
+    template = DocxTemplate('templates/automated_report_template.docx')
+
+    # Generate list of random values
+    ver = Version.query.filter(Version.id_version == version).first()
+    ver = f"{ver.major_ver}.{ver.minor_ver}.{ver.sub_ver}"
+
+    titles = Title.query.filter(Title.id_software == program).filter(Title.id_version == version).all()
+    content = {}
+    for title in titles:
+        content[title.title] = []
+        for feature in title.features:
+            content[title.title].append(feature.description)
+
+    program_name = Software.query.filter_by(id_software=program).first().name
+
+    # Declare template variables
+    context = {
+        'version': ver,
+        'day': dt.now().strftime('%d'),
+        'month': dt.now().strftime('%b'),
+        'year': dt.now().strftime('%Y'),
+        'content': content,
+    }
+
+    # Render automated report
+    template.render(context)
+    file_name = 'data/Report_{}_{}.docx'.format(program_name, ver.replace(".", "-"))
+    template.save(file_name)
+
+    if os.path.exists(file_name):
+        return send_file(file_name, as_attachment=True)
+    else:
+        return redirect(url_for('features', program=program))
+
 
 if __name__ == '__main__':
     app.run()

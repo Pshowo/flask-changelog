@@ -5,7 +5,7 @@
         <h4 class='col-2' style="color:#452369;">
             {{feature[0].versions.major_ver}}.{{feature[0].versions.minor_ver}}.{{feature[0].versions.sub_ver}}</h4>
         {% if login.user != None %}
-            <div class='col text-end'><button type="button" class="btn btn-outline-dark btn-sm">PDF</button></div>
+            <div class='col text-end'><a href="{{ url_for('download_doc', program=feature[0].id_soft, version=feature[0].id_version ) }}" type="button" class="btn btn-outline-dark btn-sm">PDF</a></div>
         {% endif %}
     </div>
 
