@@ -39,17 +39,14 @@ class Features(DB.Model):  # parent
     __tablename__ = 'features'
     id_features = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_version = DB.Column(DB.Integer, DB.ForeignKey('version.id_version'))
-    date = DB.Column(DB.String, nullable=False)
-    description = DB.Column(DB.Text)
-    id_author = DB.Column(DB.Integer)
-    link = DB.Column(DB.String(250))
-    title = DB.Column(DB.String(200))
+    id_title = DB.Column(DB.Integer, DB.ForeignKey('title.id_title'))
     id_soft = DB.Column(DB.Integer)
+    id_author = DB.Column(DB.Integer)
+    description = DB.Column(DB.Text)
+    date = DB.Column(DB.String, nullable=False)
+    link = DB.Column(DB.String(250))
 
     versions = DB.relationship('Version', back_populates="all_version", lazy=True)
-
-    # version_minor =
-    # version_sub =
 
     def __repr__(self):
         return "ID: {}".format(self.id_features)
@@ -75,6 +72,17 @@ class Software(DB.Model):
     def __repr__(self):
         return "ID: {}/{}".format(self.id_software, self.name)
 
+
+class Title(DB.Model):
+    id_title = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
+    id_software = DB.Column(DB.Integer, nullable=False)
+    id_version = DB.Column(DB.Integer)
+    title = DB.Column(DB.String(200))
+    date = DB.Column(DB.String, nullable=False)
+    features = DB.relationship('Features', backref="features", lazy=True)
+
+    def __repr__(self):
+        return "{}. {}".format(self.id_title, self.title)
 
 class UserPass:
 
@@ -187,15 +195,72 @@ def features(program):
 
     DB.create_all()
     # program = Software.query.filter(Software.id_software == prog).first()
+
     all_version = Version.query.all()
     distinct_versions = DB.session.query(Features.id_version).filter(Features.id_soft == program).order_by(
         Features.id_version.desc()).distinct().all()
     content = []
     for i in range(len(distinct_versions)):
         content.append(DB.session.query(Features).filter(Features.id_version == distinct_versions[i][0]).all())
-    programs = Software.query.all()
+    programs = Software.query.all()  # software
+    titles = DB.session.query(Title).filter(Title.id_software == program).distinct().all()
+    dis_titles = DB.session.query(Title.title).filter(Title.id_software==program).distinct().all()
+    print("Titles:")
+    print(titles)
+
     return render_template('features.html', pr=program, content=content, versions=all_version, ds_ver=distinct_versions,
-                           active_menu='features', login=login, programs=programs)
+                           active_menu='features', login=login, programs=programs, titles=titles, options=dis_titles)
+
+
+@app.route('/form', methods=['GET', 'POST'])
+def form():
+    login = UserPass(session.get('user'))
+    login.get_user_info()
+    if not login.is_valid:
+        return redirect(url_for('login'))
+
+    program_id = int(request.form['program_id'])
+    majorVer = request.form['majorVer']
+    minorVer = request.form['minorVer']
+    subVer = request.form['subVer']
+    ic("Version:", majorVer, minorVer, subVer)
+    # Checks if version exist:
+    ver_ID = Version.query.filter(Version.id_soft == program_id).\
+        filter(Version.major_ver == request.form['majorVer']).\
+        filter(Version.minor_ver == request.form['minorVer']).\
+        filter(Version.sub_ver == request.form['subVer']).first()
+
+    if ver_ID is None:
+        # Adding new Version
+        ic("Adding new version into database")
+        new_version = Version(id_soft=program_id, major_ver=request.form['majorVer'], minor_ver=request.form['minorVer'], sub_ver=request.form['subVer'])
+        DB.session.add(new_version)
+        DB.session.commit()
+        ver_ID = Version.query.filter(Version.id_soft == program_id).\
+            filter(Version.major_ver == request.form['majorVer']).\
+            filter(Version.minor_ver == request.form['minorVer']).\
+            filter(Version.sub_ver == request.form['subVer']).first()
+    ic(ver_ID.id_version)
+    # Checks if the title exist:
+    title_ID = Title.query.filter(Title.id_version == ver_ID.id_version).\
+        filter(Title.id_software == program_id).\
+        filter(Title.title == request.form['title']).first()
+
+    if title_ID is None:
+        # Adding new title
+        new_title = Title(id_software=program_id, id_version=ver_ID.id_version, title=request.form['title'], date=dt.now().strftime('%Y-%m-%d'))
+        DB.session.add(new_title)
+        DB.session.commit()
+        title_ID = Title.query.filter(Title.id_version == ver_ID.id_version).\
+            filter(Title.id_software == program_id).\
+            filter(Title.title == request.form['title']).first()
+    ic(title_ID.id_title)
+    # Added form to db
+    new_feature = Features(id_version=ver_ID.id_version, id_title=title_ID.id_title, id_soft=program_id, id_author=1, description=request.form['desc'], date=dt.now().strftime('%Y-%m-%d'), link=request.form['link'])
+    DB.session.add(new_feature)
+    DB.session.commit()
+
+    return redirect(url_for('features', program=program_id))
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -230,56 +295,6 @@ def logout():
         session.pop('user', None)
         flash('You are logged out', category='info')
     return redirect(url_for('login'))
-
-
-@app.route('/form', methods=['GET', 'POST'])
-def form():
-    login = UserPass(session.get('user'))
-    login.get_user_info()
-    if not login.is_valid:
-        return redirect(url_for('login'))
-
-    for p in request.form:
-        print(p, request.form[p])
-
-    db = get_db()
-    sql_command = f"select id_software from software where name is '{request.form['programName']}';"
-    cur = db.execute(sql_command)
-    id_soft = cur.fetchone()
-    ic(id_soft[0])
-
-    # ------------------------------
-    if request.form['programName'] == 'Program 1':
-        prog = 1
-    else:
-        prog = 2
-    value_list = [prog, request.form['majorVer'], request.form['minorVer'], request.form['subVer']]
-    # Checks if the version is available in db
-    sql_command1 = f"select * from version where id_soft==? and major_ver==? and minor_ver==? and sub_ver==?;"
-    cur = db.execute(sql_command1, value_list)
-    id_soft = cur.fetchone()
-    if id_soft is None:
-        # Version non exists, create new
-        sql_command = "insert into version(id_soft, major_ver, minor_ver, sub_ver) values (?, ?, ?, ?);"
-        db.execute(sql_command, value_list)
-        db.commit()
-        cur = db.execute(sql_command1, value_list)
-        id_soft = cur.fetchone()
-        a = (dict(zip(id_soft.keys(), id_soft)))
-        id_version = a['id_version']
-    else:
-        # Version is avaiable, returns id_version
-        a = (dict(zip(id_soft.keys(), id_soft)))
-        id_version = a['id_version']
-    # -------------------------------------
-
-    # Added form to db
-    sql_command = "insert into features(id_version, date, description, id_author, link, title, id_soft) values (?, ?, ?, ?, ?, ?, ?);"
-    db.execute(sql_command, [id_version, dt.now().strftime('%Y-%m-%d'), request.form['desc'], 1, request.form['link'],
-                             request.form['title'], prog])
-    db.commit()
-
-    return redirect(url_for('index', pr=[f'{prog}']))
 
 
 @app.route('/users')

@@ -1,14 +1,13 @@
 <h4 class='display-7 text-center'>Add new feature</h4>
 <hr>
 <form id="new_feature" action="{{ url_for('form') }}" method="POST">
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="programName" id="inlineRadio1" value="Program 1">
-        <label class="form-check-label" for="inlineRadio1">Program 1</label>
-    </div>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="programName" id="inlineRadio2" value="Program 2">
-        <label class="form-check-label" for="inlineRadio2">Program 2</label>
-    </div>
+    <select class="form-select" aria-label="Default select example" name="program_id">
+      <option selected name="program_id">Choose program:</option>
+        {% for program in programs %}
+            <option value={{program.id_software}} name="program_id">{{program.name}}</option>
+        {% endfor %}
+    </select><br>
+
 
     <div class="input-group mb-3">
       <span class="input-group-text">ver:</span>
@@ -22,19 +21,17 @@
     <label class="form-label">Title</label>
     <input class="form-control" list="datalistOptions" name="title" placeholder="Title/Group">
     <datalist id="datalistOptions">
-        <option value="Title 1">
-        <option value="Title 2">
-        <option value="Title 3">
-        <option value="Title 4">
-        <option value="Title 5">
-    </datalist>
+        {% for title in options %}
+            <option value="{{title.title}}">
+        {% endfor %}
+    </datalist><br>
 
     <label class="form-label">Description</label>
-    <textarea type="text" class="form-control" placeholder="" name="desc"></textarea>
+    <textarea type="text" class="form-control" placeholder="" name="desc"></textarea><br>
 
     <label  class="form-label">Link to task</label>
     <input type="text" class="form-control" id="basic-url" placeholder="trello, youtrack etc.." name="link">
     <br>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
-<p><small class='text-end'>Instruction how to create new featrue and add main version.</small></p>
+<p><small class='text-end'>Instruction how to create new feature and add main version.</small></p>

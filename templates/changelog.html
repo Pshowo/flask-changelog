@@ -13,26 +13,29 @@
     <div class='container row'>
         <div class='col-1'></div>
         <div class='container col-11'>
-            <div class='row'>
-                <h6 class='col fw-bolder'>{{feature[0].title}}</h6>
-                <small class='col-3 text-end '><em>{{feature[0].date}} &emsp; {{feature[0].initial}}</em></small>
-            </div>
-            <div class='row'>
-                <div class='col-1'></div>
-                <ol class="col list-group list-group-numbered">
-                    {%for i in feature%}
-                        <li class="row">
-                            <p class="col my-0">{{feature[loop.index-1].description}}</p>
-                            {% if login.user != None %}
-                                {%if feature[0].link != ""%}
-                                <a href="{{feature[0].link}}" class='col-1 text-end'><i class="fas fa-link"></i></a>
-                                {%endif%}
-                            {% endif %}
-                        </li>
-                    {%endfor%}
-                </ol></div>
-            <div class='row'>
-
+            {% for title in titles %}
+                {% if feature[0].id_version == title.id_version %}
+                    <div class='row'>
+                        <h6 class='col fw-bolder'>{{title.title}}</h6>
+                        <small class='col-3 text-end ' style="color:silver"><em>{{title.date}}</em></small>
+                    </div>
+                    <div class='row'>
+                        <div class='col-1'></div>
+                        <ol class="col list-group list-group-numbered">
+                            {%for i in title.features%}
+                                <li class="row">
+                                    <p class="col my-0">{{i.description}}</p>
+                                    {% if login.user != None %}
+                                        {%if feature[0].link != ""%}
+                                            <a href="{{feature[0].link}}" class='col-1 text-end'><i class="fas fa-link"></i></a>
+                                        {%endif%}
+                                    {% endif %}
+                                </li>
+                            {%endfor%}
+                        </ol></div>
+                    <div class='row'>
+                {% endif%}
+            {% endfor %}
             </div>
             <hr class="my-2">
         </div>
