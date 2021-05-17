@@ -2,7 +2,7 @@
 {% block title %}Features{% endblock %}
 
 {% block content %}
-<section class='col-8'>
+<section class='col px-3'>
     <ul class="nav nav-tabs">
         {% for program in programs%}
             <li class="nav-item">
@@ -21,8 +21,8 @@
 </section>
 {% endblock %}
 
-{% block aside%}
-<aside class='col-4' >
+{% block aside %}
+<aside class='col p-5 text-white' >
     {% if login.user != None %}
         {% include "form.html" %}
     {% endif %}

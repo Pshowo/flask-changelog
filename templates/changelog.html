@@ -2,7 +2,7 @@
 <div class='container row p-0 m-0'>
     <!-- Header -->
     <div class='container row'>
-        <h4 class='col-2' style="color:#452369;">
+        <h4 class='col-2' style="color:#0f2417;">
             {{feature[0].versions.major_ver}}.{{feature[0].versions.minor_ver}}.{{feature[0].versions.sub_ver}}</h4>
         {% if login.user != None %}
             <div class='col text-end'><a href="{{ url_for('download_doc', program=feature[0].id_soft, version=feature[0].id_version ) }}" type="button" class="btn btn-outline-dark btn-sm">PDF</a></div>
@@ -12,18 +12,18 @@
     <!-- Zastapic petla -->
     <div class='container row'>
         <div class='col-1'></div>
-        <div class='container col-11'>
+        <div class='container col-11 text-start'>
             {% for title in titles %}
                 {% if feature[0].id_version == title.id_version %}
                     <div class='row'>
-                        <h6 class='col fw-bolder'>{{title.title}}</h6>
+                        <h6 class='col fw-bolder' style="color:#0f2417;">{{title.title}}</h6>
                         <small class='col-3 text-end ' style="color:silver"><em>{{title.date}}</em></small>
                     </div>
                     <div class='row'>
                         <div class='col-1'></div>
                         <ol class="col list-group list-group-numbered">
                             {%for i in title.features%}
-                                <li class="row">
+                                <li class="row" style="color:#0f2417;">
                                     <p class="col my-0">{{i.description}}</p>
                                     {% if login.user != None %}
                                         {%if feature[0].link != ""%}
