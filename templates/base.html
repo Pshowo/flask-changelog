@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" class="h-100">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.83.1">
+    <title>{% block title %}{% endblock %}</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/cover/">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Farro&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <script src="https://kit.fontawesome.com/d996a41347.js" crossorigin="anonymous"></script>
+    <script src="static/jquery-3.6.0.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/assets/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+    </style>
+
+    <!-- Custom styles for this template -->
+    <link href="../static/cover.css" rel="stylesheet">
+    </head>
+    <body class="d-flex h-100 text-center">
+        <main class='d-flex h-100 col-7 p-3 flex-fill flex-column align-middle'>
+            <nav class="nav justify-content-end nav-menu">
+                <!-- Header -->
+                {% include 'menu.html'%}
+            </nav>
+            {% if login.user == None %}
+                <div class='col p-5 '>
+                    <h1>Manage your changelog</h1>
+                    <p class="lead">Cover is a one-page template for building simple and beautiful home pages. Download, edit the text, and add your own fullscreen background photo to make it your own.</p>
+                </div>
+            {% else %}
+            <div class='row'>
+                <!-- Content -->
+                
+            </div>
+            {% endif%}
+            {% block content %}{% endblock %}
+            <div class="col">
+
+            </div>
+
+            
+        </main>
+
+        <aside class='d-flex h-100 col-5 bg_img'>
+            
+            <div class="containter h-100 w-100 p-3 {{'blur' if login.user != None}}">
+                <header class="row align-items-start">
+                    <div class='pt-3'>
+                    <h2 class="float-end mb-0 text-white">ChangeLog</h2>
+                    </div>
+                </header>
+                {% block aside %}{% endblock %}
+                <footer class="text-white-50 row align-items-end">
+                    <p style="font-size: 0.7em;">Photo by <a class='text-white' href="https://unsplash.com/@trapnation?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Andre Benz</a> on <a class="text-white" href="https://unsplash.com/s/visual/f5e7330c-f27c-4226-9a48-3f639cd8d0b3?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
+                </footer>
+            </div>
+        </aside>
+
+
+    </body>
+</html>
+
+
