@@ -119,36 +119,36 @@ class UserPass:
         self.password = random_password
 
     def login_user(self):
-        db = get_db()
-        sql_statement = 'select id, name, email, password, is_active, is_admin from users where name=?'
-        cur = db.execute(sql_statement, [self.user])
-        user_record = cur.fetchone()
+        user_record = Users.query.filter(Users.name == self.user).first()
 
-        if user_record is not None and self.verify_password(user_record['password'], self.password):
-            return user_record
+        if user_record is not None and self.verify_password(user_record.password, self.password):
+            if user_record.is_active:
+                return user_record
+            else:
+                flash("Account is disable. Contact with your admin.", category='warning')
+                self.user = None
+                self.password = None
+                return None
         else:
             self.user = None
             self.password = None
             return None
 
     def get_user_info(self):
-        db = get_db()
-        sql = "select name, email, is_active, is_admin from users where name = ?"
-        cur = db.execute(sql, [self.user])
-        db_user = cur.fetchone()
+        db_user = Users.query.filter_by(name=self.user).first()
 
         if db_user is None:
             self.is_valid = False
             self.is_admin = False
             self.email = ""
-        elif db_user['is_active'] != 1:
+        elif db_user.is_active != 1:
             self.is_valid = False
             self.is_admin = False
-            self.email = db_user['email']
+            self.email = db_user.email
         else:
             self.is_valid = True
-            self.is_admin = db_user['is_admin']
-            self.email = db_user['email']
+            self.is_admin = db_user.is_admin
+            self.email = db_user.email
 
 
 def get_db():
@@ -168,34 +168,29 @@ def close_db(error):
 
 @app.route('/init_app')
 def init_app():
-    db = get_db()
-    sql_statement = 'select count(*) as cnt from users where is_active and is_admin;'
-    cur = db.execute(sql_statement)
-    active_admins = cur.fetchone()
+
+    active_admins = Users.query.filter(Users.is_active == True).filter(Users.is_admin == True).count()
 
     if active_admins is not None and active_admins['cnt'] > 0:
-        print("Application is already set-up. Nothing to do.")
-        return redirect(url_for("index"))
+        flash("Application is already set-up. Nothing to do.")
+        return redirect(url_for("login"))
 
     # if not - create or update random admin accounts
     user_pass = UserPass()
     user_pass.get_random_user_password()
-    db.execute("""insert into users(name, email, password, is_active, is_admin) values(?,?,?, True, True);""",
-               [user_pass.user, 'pjot@mail.no', user_pass.hash_password()])
-    db.commit()
-    print("User {} with password {} has been created.".format(user_pass, user_pass.password))
-    return redirect(url_for('index'))
+    new_admin = Users(name=user_pass.user, email='pjot@mail.no', password=user_pass.hash_password(), is_active=True, is_admin=True)
+    DB.session.add(new_admin)
+    DB.session.commit()
+    print("User {} with password {} has been created.".format(user_pass.user, user_pass.password))
+    return redirect(url_for('login'))
 
 
 @app.route('/features/<int:program>')
 def features(program):
     login = UserPass(session.get('user'))
     login.get_user_info()
-    # if not login.is_valid:
-    #     return redirect(url_for('login'))
 
     DB.create_all()
-    # program = Software.query.filter(Software.id_software == prog).first()
 
     all_version = Version.query.all()
     distinct_versions = DB.session.query(Features.id_version).filter(Features.id_soft == program).order_by(
@@ -303,10 +298,7 @@ def users():
     login.get_user_info()
     if not login.is_valid or not login.is_admin:
         return redirect(url_for('login'))
-    db = get_db()
-    sql_command = 'select id, name, email, is_admin, is_active from users;'
-    cur = db.execute(sql_command)
-    all_users = cur.fetchall()
+    all_users = Users.query.all()
 
     return render_template('users.html', active_menu="users", users=all_users, login=login)
 
@@ -317,7 +309,6 @@ def user_status_change(action, user_name):
     login.get_user_info()
     if not login.is_valid or not login.is_admin:
         return redirect(url_for('login'))
-
 
     db = get_db()
 
@@ -338,11 +329,7 @@ def edit_user(user_name):
     if not login.is_valid or not login.is_admin:
         return redirect(url_for('login'))
 
-    db = get_db()
-
-    cur = db.execute('select name, email from users where name=?', [user_name])
-    user = cur.fetchone()
-    message = None
+    user = Users.query.filter_by(name=user_name).first()
 
     if user is None:
         flash("No such user", category='warning')
@@ -353,17 +340,15 @@ def edit_user(user_name):
         new_email = '' if 'email' not in request.form else request.form['email']
         new_password = '' if 'user_pass' not in request.form else request.form['user_pass']
 
-        if new_email != user['email']:
-            sql = 'update users set email=? where name=?'
-            db.execute(sql, [new_email, user_name])
-            db.commit()
+        if new_email != user.email:
+            user.email = new_email
+            DB.session.commit()
             flash("Email was changed", category='message')
 
         if new_password != '':
             user_pass = UserPass(user_name, new_password)
-            sql = 'update users set password=? where name=?'
-            db.execute(sql, [user_pass.hash_password(), user_name])
-            db.commit()
+            user.password = user_pass.hash_password()
+            DB.session.commit()
             flash("Password was changed", category='message')
         return redirect(url_for('users'))
 
@@ -379,9 +364,15 @@ def delete_user(user_name):
     login = session['user']
 
     db = get_db()
-    sql_command = 'delete from users where name = ? and name <> ?'
-    db.execute(sql_command, [user_name, login.user])
-    db.commit()
+
+    user = Users.query.filter_by(name=user_name).first()
+    if user.name == login:
+        flash("Can not delete your own account.")
+    else:
+        flash("User {} was deleted.".format(user.name))
+        DB.session.delete(user)
+        DB.session.commit()
+
     return redirect(url_for('users'))
 
 
@@ -403,14 +394,10 @@ def new_user():
         user['user_pass'] = "" if 'user_pass' not in request.form else request.form['user_pass']
 
         # checks if name exists in database
-        cursor = db.execute('select count(*) as cnt from users where name=?', [user['user_name']])
-        record = cursor.fetchone()
-        is_user_name_unique = (record['cnt'] == 0)
+        is_user_name_unique = (Users.query.filter_by(name=user['user_name']).count() == 0)
 
         # checks if email exists in database
-        cursor = db.execute('select count(*) as cnt from users where email=?', [user['email']])
-        record = cursor.fetchone()
-        is_user_email_unique = (record['cnt'] == 0)
+        is_user_email_unique = (Users.query.filter_by(email=user['email']).count() == 0)
 
         if user['user_name'] == '' or user['email'] == "" or user['user_pass'] == "":
             message = ("Cannot be empty", 'info')
@@ -422,9 +409,9 @@ def new_user():
         if not message:
             user_pass = UserPass(user['user_name'], user['user_pass'])
             password_hash = user_pass.hash_password()
-            sql_statement = """insert into users(name, email, password, is_active, is_admin) values(?, ?, ?, True, False);"""
-            db.execute(sql_statement, [user['user_name'], user['email'], password_hash])
-            db.commit()
+            new_user = Users(name=user['user_name'], email=user['email'], password=password_hash, is_active=True, is_admin=False)
+            DB.session.add(new_user)
+            DB.session.commit()
             flash("User '{}' created.".format(user['user_name']))
             return redirect(url_for('users'))
         else:
@@ -460,9 +447,7 @@ def edit_program(program_id):
 
     db = get_db()
 
-    cur = db.execute('select id_software, name, description from software where id_software=?', [program_id])
-    program = cur.fetchone()
-    message = None
+    program = Software.query.filter_by(id_software=program_id).first()
 
     if program is None:
         flash("No such program", category='warning')
@@ -473,16 +458,14 @@ def edit_program(program_id):
         new_name = '' if 'name' not in request.form else request.form['name']
         new_desc = '' if 'desc' not in request.form else request.form['desc']
 
-        if new_name != program['name']:
-            sql = 'update software set name=? where id_software=?'
-            db.execute(sql, [new_name, program['id_software']])
-            db.commit()
+        if new_name != program.name:
+            program.name = new_name
+            DB.session.commit()
             flash("Email was changed", category='message')
 
         if new_desc != '':
-            sql = 'update software set description=? where id_software=?'
-            db.execute(sql, [new_desc, program[0]])
-            db.commit()
+            program.description = new_desc
+            DB.session.commit()
             flash("Description was changed", category='message')
         return redirect(url_for('programs'))
 
@@ -493,10 +476,9 @@ def delete_program(program_id):
     if not login.is_valid or not login.is_admin:
         return redirect(url_for('login'))
 
-    db = get_db()
-    sql_command = 'delete from software where id_software = ?'
-    db.execute(sql_command, [program_id])
-    db.commit()
+    program = Software.query.filter_by(id_software=program_id).first()
+    DB.session.delete(program)
+    DB.session.commit()
     return redirect(url_for('programs'))
 
 @app.route('/download/<program>/<version>')
