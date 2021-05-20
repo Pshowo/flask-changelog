@@ -1,13 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}New User{% endblock%}
-{% block content %}
-<div class="conteiner row">
-  <div class="col-2"></div>
+{% block aside %}
+<div class="col p-5 text-white">
 
-  <div class="col conteiner">
-    <div class="row m-20">
-      <div class="col-5 h1">New user</div>
-    </div>
+    <h5 class="text-center">New user</h5><hr>
 
     <form id="user_form" action="{{ url_for('new_user') }}" method="POST">
 
@@ -26,15 +22,10 @@
         <input type="password" class="form-control" id="user_pass" name="user_pass">
       </div>
 
-      <div class="mb-3 form-check">
-        <input type="checkbox" class="form-check-input" id="exampleCheck1">
-        <label class="form-check-label" for="exampleCheck1">Check me out</label>
-      </div>
+
 
       <button type="submit" class="btn btn-primary" value="Send">Submit</button>
 
     </form>
-  </div>
-  <div class="col-2"></div>
 </div>
 {% endblock %}

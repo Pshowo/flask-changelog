@@ -40,8 +40,8 @@
   });
 </script>
 
-
-  <table class="table table-striped col ms-5">
+<div class="container row pt-40">
+  <table class="table table-striped col ">
     <thead>
       <tr>
         <th scope="col">#</th>
@@ -63,7 +63,7 @@
           <a type="button" class="btn btn-outline-dark btn-sm"
              href="{{ url_for('edit_program', program_id=program.id_software) }}">Edit</a>
 
-          <a type="button" class="btn btn-outline-danger btn-sm delete-confirm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+          <a type="button" class="btn btn-outline-danger btn-sm delete-confirm mt-1" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
              data-desc="{{ 'Delete program {}?\nDesc:\n{}'.format(program.name, program.description) }}"
               data-url="{{ url_for('delete_program', program_id=program.id_software) }}" >Delete</a>
           </td>
@@ -73,23 +73,24 @@
 
     </tbody>
   </table>
+</div>
 {% endblock%}
 
 {% block aside %}
-<aside class='col-4' >
-  {% if login.user != None %}
-        <h5 class="text-center">Add new program</h5><hr>
-        <form id="new_program" action="{{ url_for('programs') }}" method="POST">
-          <div class="mb-3">
-            <label for="exampleFormControlInput1" class="form-label">Program name</label>
-            <input type="text" class="form-control" name='name' id="exampleFormControlInput1">
-          </div>
-          <div class="mb-3">
-            <label for="exampleFormControlTextarea1" class="form-label">Program description</label>
-            <textarea class="form-control" name='desc' id="exampleFormControlTextarea1" rows="3"></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Add +</button>
-        </form>
-  {% endif %}
-</aside>
+  <aside class='col p-5 text-white' >
+    {% if login.user != None %}
+          <h5 class="text-center">Add new program</h5><hr>
+          <form id="new_program" action="{{ url_for('programs') }}" method="POST">
+            <div class="mb-3">
+              <label for="exampleFormControlInput1" class="form-label">Program name</label>
+              <input type="text" class="form-control" name='name' id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+              <label for="exampleFormControlTextarea1" class="form-label">Program description</label>
+              <textarea class="form-control" name='desc' id="exampleFormControlTextarea1" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Add +</button>
+          </form>
+    {% endif %}
+  </aside>
 {% endblock %}
