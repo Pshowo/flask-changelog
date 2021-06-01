@@ -130,3 +130,4 @@ dmypy.json
 /data/changelog.db
 /reports/
 /.idea/
+.vscode
