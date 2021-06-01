@@ -170,8 +170,7 @@ def close_db(error):
 def init_app():
 
     active_admins = Users.query.filter(Users.is_active == True).filter(Users.is_admin == True).count()
-
-    if active_admins is not None and active_admins['cnt'] > 0:
+    if active_admins is not None and active_admins > 0:
         flash("Application is already set-up. Nothing to do.")
         return redirect(url_for("login"))
 
