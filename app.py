@@ -1,4 +1,5 @@
 from flask import Flask, render_template, flash, redirect, url_for, request, g, session, send_file
+from flask.helpers import send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime as dt
 from icecream import ic
@@ -8,7 +9,9 @@ import hashlib
 import binascii
 import sqlite3
 from docxtpl import DocxTemplate
+from multiprocessing import Process
 import os
+from icecream import ic
 
 app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
@@ -168,7 +171,7 @@ def close_db(error):
 
 @app.route('/init_app')
 def init_app():
-
+    DB.create_all()
     active_admins = Users.query.filter(Users.is_active == True).filter(Users.is_admin == True).count()
     if active_admins is not None and active_admins > 0:
         flash("Application is already set-up. Nothing to do.")
@@ -253,6 +256,8 @@ def form():
     DB.session.add(new_feature)
     DB.session.commit()
 
+    gen_file(program_id, ver_ID.id_version)
+
     return redirect(url_for('features', program=program_id))
 
 
@@ -267,8 +272,6 @@ def login():
         user_name = "" if "user_name" not in request.form else request.form['user_name']
         user_pass = "" if "user_pass" not in request.form else request.form['user_pass']
 
-        print("user_name: ", user_name)
-        print("user_pass: ", user_pass)
         login = UserPass(user_name, user_pass)
         login_record = login.login_user()
 
@@ -276,7 +279,12 @@ def login():
             session['user'] = user_name
             flash("Login {} succesfull".format(user_name), category='message')
             first_prog = Software.query.first()
-            return redirect(url_for('features', program=first_prog.id_software))
+            print(" *** First prog: ", first_prog)
+            if first_prog == None:
+                first_prog = 0
+            else:
+                first_prog = first_prog.id_software
+            return redirect(url_for('features', program=first_prog))
         else:
             flash("Login field, try again.", category='error')
             return render_template('login_page.html', active_menu='login', login=login)
@@ -482,11 +490,25 @@ def delete_program(program_id):
 
 @app.route('/download/<program>/<version>')
 def download_doc(program, version):
+    ic()
+    ver = Version.query.filter(Version.id_version == version).first()
+    ver = f"{ver.major_ver}.{ver.minor_ver}.{ver.sub_ver}"
+    
+    program_name = Software.query.filter_by(id_software=program).first().name
+    file_name = 'Report_{}_{}.docx'.format(program_name, ver.replace(".", "-"))
+    ic(file_name)
+    result = send_from_directory("data", file_name, as_attachment=True, cache_timeout=0)
 
-    # Import template document
-    template = DocxTemplate('templates/automated_report_template.docx')
+    if os.path.exists(file_name):
+        # return send_file(file_name, as_attachment=True)
+        return result
+    else:
+        return redirect(url_for('features', program=program))
 
-    # Generate list of random values
+
+def gen_file(program, version):
+    ic()
+        # Generate list of random values
     ver = Version.query.filter(Version.id_version == version).first()
     ver = f"{ver.major_ver}.{ver.minor_ver}.{ver.sub_ver}"
 
@@ -499,6 +521,12 @@ def download_doc(program, version):
 
     program_name = Software.query.filter_by(id_software=program).first().name
 
+    # Import template document
+    template = DocxTemplate('templates/automated_report_template.docx')
+    file_name = 'Report_{}_{}.docx'.format(program_name, ver.replace(".", "-"))
+
+    if os.path.exists(f"data/{file_name}"):
+        ic("File exists.")
     # Declare template variables
     context = {
         'version': ver,
@@ -510,13 +538,10 @@ def download_doc(program, version):
 
     # Render automated report
     template.render(context)
-    file_name = 'data/Report_{}_{}.docx'.format(program_name, ver.replace(".", "-"))
-    template.save(file_name)
+    
+    template.save("data/"+file_name)
 
-    if os.path.exists(file_name):
-        return send_file(file_name, as_attachment=True)
-    else:
-        return redirect(url_for('features', program=program))
+    return file_name
 
 
 if __name__ == '__main__':
