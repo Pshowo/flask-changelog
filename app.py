@@ -219,7 +219,6 @@ def form():
     majorVer = request.form['majorVer']
     minorVer = request.form['minorVer']
     subVer = request.form['subVer']
-    ic("Version:", majorVer, minorVer, subVer)
     # Checks if version exist:
     ver_ID = Version.query.filter(Version.id_soft == program_id).\
         filter(Version.major_ver == request.form['majorVer']).\
@@ -228,7 +227,6 @@ def form():
 
     if ver_ID is None:
         # Adding new Version
-        ic("Adding new version into database")
         new_version = Version(id_soft=program_id, major_ver=request.form['majorVer'], minor_ver=request.form['minorVer'], sub_ver=request.form['subVer'])
         DB.session.add(new_version)
         DB.session.commit()
@@ -236,7 +234,6 @@ def form():
             filter(Version.major_ver == request.form['majorVer']).\
             filter(Version.minor_ver == request.form['minorVer']).\
             filter(Version.sub_ver == request.form['subVer']).first()
-    ic(ver_ID.id_version)
     # Checks if the title exist:
     title_ID = Title.query.filter(Title.id_version == ver_ID.id_version).\
         filter(Title.id_software == program_id).\
@@ -250,7 +247,6 @@ def form():
         title_ID = Title.query.filter(Title.id_version == ver_ID.id_version).\
             filter(Title.id_software == program_id).\
             filter(Title.title == request.form['title']).first()
-    ic(title_ID.id_title)
     # Added form to db
     new_feature = Features(id_version=ver_ID.id_version, id_title=title_ID.id_title, id_soft=program_id, id_author=1, description=request.form['desc'], date=dt.now().strftime('%Y-%m-%d'), link=request.form['link'])
     DB.session.add(new_feature)
@@ -490,16 +486,14 @@ def delete_program(program_id):
 
 @app.route('/download/<program>/<version>')
 def download_doc(program, version):
-    ic()
     ver = Version.query.filter(Version.id_version == version).first()
     ver = f"{ver.major_ver}.{ver.minor_ver}.{ver.sub_ver}"
     
     program_name = Software.query.filter_by(id_software=program).first().name
     file_name = 'Report_{}_{}.docx'.format(program_name, ver.replace(".", "-"))
-    ic(file_name)
     result = send_from_directory("data", file_name, as_attachment=True, cache_timeout=0)
 
-    if os.path.exists(file_name):
+    if os.path.exists("data/"+file_name):
         # return send_file(file_name, as_attachment=True)
         return result
     else:
@@ -507,8 +501,7 @@ def download_doc(program, version):
 
 
 def gen_file(program, version):
-    ic()
-        # Generate list of random values
+    # Generate list of random values
     ver = Version.query.filter(Version.id_version == version).first()
     ver = f"{ver.major_ver}.{ver.minor_ver}.{ver.sub_ver}"
 
@@ -525,8 +518,6 @@ def gen_file(program, version):
     template = DocxTemplate('templates/automated_report_template.docx')
     file_name = 'Report_{}_{}.docx'.format(program_name, ver.replace(".", "-"))
 
-    if os.path.exists(f"data/{file_name}"):
-        ic("File exists.")
     # Declare template variables
     context = {
         'version': ver,
