@@ -182,6 +182,7 @@ def init_app():
     DB.session.add(new_admin)
     DB.session.commit()
     print("User {} with password {} has been created.".format(user_pass.user, user_pass.password))
+    flash("User {} with password {} has been created.".format(user_pass.user, user_pass.password))
     return redirect(url_for('login'))
 
 
