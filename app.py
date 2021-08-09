@@ -14,11 +14,9 @@ import os
 from icecream import ic
 
 app = Flask(__name__)
-app.config.from_pyfile('config.cfg')
 
-app_info = {
-    'db_file': "data/changelog.db"
-}
+
+app.config.from_pyfile('config.py')
 DB = SQLAlchemy(app)
 
 
@@ -156,7 +154,7 @@ class UserPass:
 
 def get_db():
     if not hasattr(g, 'sqlite_db'):
-        conn = sqlite3.connect(app_info['db_file'])
+        conn = sqlite3.connect(app.config['SQLALCHEMY_DATABASE_URI'])
         conn.row_factory = sqlite3.Row
         g.sqlite_db = conn
     return g.sqlite_db
@@ -537,3 +535,4 @@ def gen_file(program, version):
 
 if __name__ == '__main__':
     app.run()
+
